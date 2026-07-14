@@ -1,0 +1,17 @@
+# BinGo Flask Backend – Requirements
+# Install with: pip install -r requirements.txt
+
+# Core
+flask>=3.0.0
+flask-cors>=4.0.0
+
+# YOLOv8 (installs PyTorch + OpenCV automatically)
+ultralytics>=8.0.0
+opencv-python-headless>=4.8.0
+
+# Image processing
+Pillow>=10.0.0
+
+# Utilities
+numpy>=1.24.0
+bcrypt>=4.1.0

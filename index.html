@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BinGo – Smart Scrap Recycling</title>
+
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700&family=Barlow+Condensed:wght@600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
+  <!-- Leaflet Maps -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="script.js?v=1.1"></script>
+
+
+  <!-- BinGo Styles -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Hero Video Background -->
+  <style>
+    /* ─── Hero animated background ─── */
+    .hero {
+      position: relative;
+      overflow: hidden;
+      background: #060e06;
+    }
+
+    /* Animated gradient mesh */
+    .hero-anim-bg {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 40%, rgba(46,125,50,0.45) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 80% 20%, rgba(27,94,32,0.35) 0%, transparent 55%),
+        radial-gradient(ellipse 70% 50% at 60% 80%, rgba(67,160,71,0.20) 0%, transparent 50%),
+        linear-gradient(135deg, #071207 0%, #0d1f0d 50%, #060e06 100%);
+      background-size: 200% 200%, 200% 200%, 200% 200%, 100% 100%;
+      animation: meshMove 12s ease-in-out infinite alternate;
+    }
+
+    @keyframes meshMove {
+      0%   { background-position: 0% 50%,   100% 0%,   50% 100%,  0 0; }
+      33%  { background-position: 30% 20%,  70% 40%,   20% 60%,   0 0; }
+      66%  { background-position: 60% 80%,  20% 70%,   80% 20%,   0 0; }
+      100% { background-position: 100% 50%, 0% 100%,  50% 0%,    0 0; }
+    }
+
+    /* SVG dot-grid pattern overlay */
+    .hero-dots {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      opacity: 0.18;
+      background-image: radial-gradient(circle, rgba(100,200,100,0.6) 1px, transparent 1px);
+      background-size: 36px 36px;
+    }
+
+    /* Floating glowing orbs */
+    .hero-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0;
+      z-index: 1;
+      animation: orbFloat 8s ease-in-out infinite;
+    }
+    .hero-orb-1 {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(67,160,71,0.4), transparent 70%);
+      top: -100px; left: -80px;
+      animation-delay: 0s; animation-duration: 10s;
+      opacity: 0.6;
+    }
+    .hero-orb-2 {
+      width: 350px; height: 350px;
+      background: radial-gradient(circle, rgba(46,125,50,0.35), transparent 70%);
+      bottom: -80px; right: 10%;
+      animation-delay: 3s; animation-duration: 12s;
+      opacity: 0.5;
+    }
+    .hero-orb-3 {
+      width: 250px; height: 250px;
+      background: radial-gradient(circle, rgba(249,168,37,0.15), transparent 70%);
+      top: 30%; right: 25%;
+      animation-delay: 6s; animation-duration: 9s;
+      opacity: 0.4;
+    }
+
+    @keyframes orbFloat {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      25%       { transform: translate(30px, -40px) scale(1.08); }
+      50%       { transform: translate(-20px, 20px) scale(0.95); }
+      75%       { transform: translate(40px, 30px) scale(1.05); }
+    }
+
+    /* Diagonal scan-line sheen */
+    .hero-sheen {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      background: repeating-linear-gradient(
+        45deg,
+        rgba(46,125,50,0.03) 0,
+        rgba(46,125,50,0.03) 1px,
+        transparent 0,
+        transparent 50%
+      );
+      background-size: 28px 28px;
+    }
+
+    /* Left-to-right fade so text is always readable */
+    .hero-video-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      background: linear-gradient(
+        100deg,
+        rgba(6,14,6,0.80) 0%,
+        rgba(6,14,6,0.50) 55%,
+        rgba(6,14,6,0.15) 100%
+      );
+    }
+
+    /* Fullscreen local video wrapper */
+    .hero-video-bg {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    /* Video fills the entire hero, cropped to cover */
+    .hero-video-bg video {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      min-width: 100%;
+      min-height: 100%;
+    }
+
+    /* Everything inside .hero-inner must sit above the background layers */
+    .hero-inner {
+      position: relative;
+      z-index: 4;
+    }
+  </style>
+</head>
+<body>
+
+<!-- =====================================================
+     TOPBAR
+     ===================================================== -->
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="topbar-links">
+      <a href="#">Drop-Off Locations</a>
+      <a href="#">Careers</a>
+      <a href="#">FAQs</a>
+    </div>
+    <div class="topbar-contact">
+      <span><span class="material-symbols-rounded" style="font-size:16px">call</span> <b>+91 98765 43210</b></span>
+      <span><span class="material-symbols-rounded" style="font-size:16px">mail</span> <b><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1179747d7d7e5173787f767e3f787f">[BinGo@gmail.com]</a></b></span>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+     NAVIGATION
+     ===================================================== -->
+<nav>
+  <div class="nav-inner">
+    <div class="logo">
+      <img src="logo.png" alt="BinGo Logo" class="logo-img">
+      <div class="logo-text">Bin<em>Go</em></div>
+    </div>
+    <div class="nav-menu">
+      <button class="nm on"  onclick="go('home')">Home</button>
+      <button class="nm"     onclick="go('scan')">Scan Item</button>
+      <button class="nm"     onclick="go('track')">Track Pickup</button>
+      <button class="nm"     onclick="go('map')">Map</button>
+      <button class="nm"     onclick="go('dealer')">Dealer Portal</button>
+    </div>
+    <div class="nav-right" id="navAuth">
+      <button class="btn-outline-sm" onclick="go('scan')">Request a Pickup</button>
+      <button class="btn-outline-sm" style="margin-left:8px" onclick="go('auth')">Login</button>
+      <button class="btn-cta" style="margin-left:8px" onclick="go('auth')">Sign Up</button>
+    </div>
+  </div>
+</nav>
+
+<!-- =====================================================
+     PAGE: HOME
+     ===================================================== -->
+<div id="home" class="pg on">
+
+  <!-- Hero -->
+  <div class="hero">
+
+    <!-- ── Animated CSS fallback (visible instantly while video loads) ── -->
+    <div class="hero-anim-bg"></div>
+    <div class="hero-dots"></div>
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+    <div class="hero-orb hero-orb-3"></div>
+    <div class="hero-sheen"></div>
+
+    <!-- ── Local video background (no YouTube, no sign-in, no ads) ── -->
+    <div class="hero-video-bg">
+      <video autoplay muted loop playsinline>
+        <source src="hero-bg.mp4" type="video/mp4">
+      </video>
+    </div>
+    <div class="hero-video-overlay"></div>
+
+    <div class="hero-inner">
+      <div class="hero-content">
+        <div class="hero-eyebrow">India's #1 Smart Scrap Platform</div>
+        <h1>Reliable <span>Scrap</span> &amp;<br>Recycling Services</h1>
+        <p class="hero-sub">
+          We've made huge strides in recycling by investing in AI-powered detection,
+          fair pricing, and trusted dealer networks — reducing waste landfill.
+        </p>
+        <div class="hero-btns">
+          <button class="btn-hero btn-hero-y" onclick="go('scan')"><span class="material-symbols-rounded" style="vertical-align:middle;margin-right:6px">photo_camera</span> Scan My Scrap →</button>
+          <button class="btn-hero btn-hero-w" onclick="showVideo()">
+            <div class="play-ico"><span class="material-symbols-rounded">play_arrow</span></div>How It Works
+          </button>
+        </div>
+        <div class="hero-stats">
+          <div class="hstat">
+            <div class="hstat-num"><span class="material-symbols-rounded" style="font-size:2.4rem;color:var(--y)">smart_toy</span></div>
+            <div class="hstat-label">Smart AI Detection</div>
+          </div>
+          <div class="hstat">
+            <div class="hstat-num"><span class="material-symbols-rounded" style="font-size:2.4rem;color:var(--y)">payments</span></div>
+            <div class="hstat-label">Fair Price</div>
+          </div>
+          <div class="hstat">
+            <div class="hstat-num"><span class="material-symbols-rounded" style="font-size:2.4rem;color:var(--y)">verified</span></div>
+            <div class="hstat-label">Verified Dealers</div>
+          </div>
+          <div class="hstat">
+            <div class="hstat-num"><span class="material-symbols-rounded" style="font-size:2.4rem;color:var(--y)">local_shipping</span></div>
+            <div class="hstat-label">Free Pickup</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Services -->
+  <div class="section section-alt">
+    <div class="container">
+      <div style="text-align:center;margin-bottom:8px">
+        <div class="sec-eyebrow" style="display:inline-block">What We Offer</div>
+      </div>
+      <div class="sec-title" style="text-align:center">
+        We Provide A Wide Range Of<br>Reliable Recycling Services
+      </div>
+      <div class="services-grid">
+        <div class="svc-card" onclick="go('scan')">
+          <div class="svc-ico"><span class="material-symbols-rounded">home</span></div>
+          <div class="svc-title">Residential Scrap Collection</div>
+          <div class="svc-desc">Doorstep pickup for household scrap — old newspapers, bottles, metals, e-waste, and more.</div>
+          <div class="svc-link">Explore Now →</div>
+        </div>
+        <div class="svc-card" onclick="go('scan')">
+          <div class="svc-ico"><span class="material-symbols-rounded">factory</span></div>
+          <div class="svc-title">Commercial &amp; Industrial</div>
+          <div class="svc-desc">Bulk scrap collection for factories, offices, and industrial units with scheduled pickups.</div>
+          <div class="svc-link">Explore Now →</div>
+        </div>
+        <div class="svc-card" onclick="go('scan')">
+          <div class="svc-ico"><span class="material-symbols-rounded">school</span></div>
+          <div class="svc-title">Retail &amp; Institutional</div>
+          <div class="svc-desc">Customised programs for retailers, schools, hospitals, and government institutions.</div>
+          <div class="svc-link">Explore Now →</div>
+        </div>
+        <div class="svc-card" onclick="go('scan')">
+          <div class="svc-ico"><span class="material-symbols-rounded">smartphone</span></div>
+          <div class="svc-title">E-Waste Recycling</div>
+          <div class="svc-desc">Responsible disposal of electronics — mobiles, laptops, TVs, and all digital devices.</div>
+          <div class="svc-link">Explore Now →</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- About -->
+  <div class="section">
+    <div class="container">
+      <div class="about-grid">
+        <div class="about-img-wrap">
+          <div class="about-slider-box">
+            <div class="about-slider" id="abtSlider">
+              <div class="abt-slide on"><img src="https://fastly.restofworld.org/uploads/2025/08/sized_Ewaste_ChinkyShukla-7-scaled.jpg?width=800&dpr=2&crop=16:9" alt="Recycling Factory"></div>
+              <div class="abt-slide"><img src="https://kuow-prod.imgix.net/store/89a0b909de101a87f59ce5dcc3fdbfd0.jpeg?auto=format&dpr=2&crop=faces&fit=crop&fill=false&w=1400&h=792.5788497217069" alt="Recycling Truck"></div>
+              <div class="abt-slide"><img src="https://thecsruniverse.com/adminxsafe/uploads/Nancy%20India's%20Waste%20Mgmt%20Scenario.jpg" alt="Recycled Scraps"></div>
+            </div>
+            <div class="as-dots">
+              <div class="adot on"></div>
+              <div class="adot"></div>
+              <div class="adot"></div>
+            </div>
+          </div>
+          <div class="about-badge">
+            <div><div class="ab-num">100%</div></div>
+            <div class="ab-label">Sustainability Driven</div>
+          </div>
+        </div>
+        <div>
+          <div class="sec-eyebrow">Number One Scrap Collection Platform</div>
+          <div class="sec-title">A Leading Smart Scrap Service Provider</div>
+          <p style="color:var(--text3);font-size:.92rem;line-height:1.75;margin-bottom:20px">
+            We have made huge strides in sustainability by investing in AI-powered scrap detection,
+            fair pricing algorithms, and low-carbon pickup logistics leading to a significant
+            reduction in landfill waste across India.
+          </p>
+          <div class="about-checks">
+            <div class="acheck">AI-powered scrap identification and price estimation</div>
+            <div class="acheck"> top-rated scrap dealers</div>
+            <div class="acheck">Same-day and scheduled pickup slots available</div>
+            <div class="acheck">Transparent pricing with no hidden deductions</div>
+            <div class="acheck">Real-time GPS tracking of dealer pickup</div>
+          </div>
+          <button class="btn-cta" style="margin-top:28px" onclick="go('scan')">More About Us →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- How It Works -->
+  <div class="section section-alt">
+    <div class="container">
+      <div style="text-align:center;margin-bottom:8px">
+        <div class="sec-eyebrow" style="display:inline-block">Simple Process</div>
+      </div>
+      <div class="sec-title" style="text-align:center;margin-bottom:0">Four Steps to Recycle Smarter</div>
+      <div class="process-grid">
+        <div class="proc">
+          <div class="proc-num">01</div>
+          <div class="proc-ico"><span class="material-symbols-rounded">photo_camera</span></div>
+          <div class="proc-title">Snap a Photo</div>
+          <div class="proc-desc">Upload a photo of your scrap from any angle — our AI handles the rest.</div>
+        </div>
+        <div class="proc">
+          <div class="proc-num">02</div>
+          <div class="proc-ico"><span class="material-symbols-rounded">smart_toy</span></div>
+          <div class="proc-title">AI Detection</div>
+          <div class="proc-desc">Our AI identifies the material, checks recyclability, and estimates fair value.</div>
+        </div>
+        <div class="proc">
+          <div class="proc-num">03</div>
+          <div class="proc-ico"><span class="material-symbols-rounded">store</span></div>
+          <div class="proc-title">Choose Dealer &amp; Slot</div>
+          <div class="proc-desc">Pick from top-rated nearby dealers and select a convenient pickup time.</div>
+        </div>
+        <div class="proc">
+          <div class="proc-num">04</div>
+          <div class="proc-ico"><span class="material-symbols-rounded">payments</span></div>
+          <div class="proc-title">Get Paid</div>
+          <div class="proc-desc">Dealer arrives, weighs your scrap, and pays you on the spot. Done!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Market Rates -->
+  <div class="stats-band">
+    <div class="container">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:24px">
+        <div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.8rem;font-weight:800;color:var(--text);letter-spacing:-.5px;display:flex;align-items:center;gap:10px">
+            <span class="material-symbols-rounded" style="color:var(--g);font-size:2rem">monitoring</span> Live Scrap Market Rates
+          </div>
+          <div id="market-date" style="font-size:.85rem;color:var(--text3);margin-top:4px"></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;background:rgba(46,125,50,.08);padding:8px 18px;border-radius:50px;font-size:.78rem;color:var(--g);font-weight:600;border:1px solid rgba(46,125,50,.15)">
+          <span style="width:8px;height:8px;background:#4caf50;border-radius:50%;display:inline-block;box-shadow:0 0 6px #4caf50;animation:pulse 1.5s infinite"></span>
+          Updated Daily · Nagpur Region
+        </div>
+      </div>
+      <div class="mkt-carousel-wrapper">
+        <div id="market-rates-grid" class="mkt-grid"></div>
+      </div>
+      <div style="font-size:.75rem;color:var(--text3);margin-top:16px;text-align:right;font-style:italic">
+        * Indicative Nagpur market rates. Actual prices may vary by dealer, quantity &amp; condition.
+      </div>
+    </div>
+  </div>
+
+  <!-- Our Vision -->
+  <div class="section" style="background:#f9faf8">
+    <div class="container">
+      <div class="vision-row">
+        <!-- Flashcards Left -->
+        <div class="flashcard-grid">
+          <div class="flashcard">
+            <div class="fc-ico"><span class="material-symbols-rounded">support_agent</span></div>
+            <div class="fc-title">24/7 Support</div>
+            <div class="fc-desc">Round-the-clock assistance for all your recycling and pickup queries.</div>
+          </div>
+          <div class="flashcard">
+            <div class="fc-ico"><span class="material-symbols-rounded">verified_user</span></div>
+            <div class="fc-title">Verified Dealers</div>
+            <div class="fc-desc">Every partner is background-checked and high-rated for secure transactions.</div>
+          </div>
+          <div class="flashcard">
+            <div class="fc-ico"><span class="material-symbols-rounded">track_changes</span></div>
+            <div class="fc-title">Live Tracking</div>
+            <div class="fc-desc">Follow your scrap pickup in real-time from dispatch to completion.</div>
+          </div>
+          <div class="flashcard">
+            <div class="fc-ico"><span class="material-symbols-rounded">currency_rupee</span></div>
+            <div class="fc-title">Instant Pay</div>
+            <div class="fc-desc">Get fair market value paid instantly via your preferred method.</div>
+          </div>
+        </div>
+
+        <!-- Vision Text Right -->
+        <div class="vision-text-side">
+          <div class="sec-eyebrow">Why BinGo Exists</div>
+          <div class="sec-title">Our Vision For A<br>Cleaner, Greener India</div>
+          <p style="color:var(--text3);font-size:1.05rem;line-height:1.8;margin-bottom:24px">
+            At BinGo, we're not just a platform; we're a movement. We believe in a world where waste doesn't exist, 
+            and every scrap of material finds its way back into the cycle of production. 
+          </p>
+          <p style="color:var(--text3);font-size:1.05rem;line-height:1.8;margin-bottom:24px">
+            Our goal is to empower every Indian household to become a sustainability champion. By combining 
+            <b>Advanced AI</b> with a <b>Human-Centric Approach</b>, we make the process of recycling 
+            as seamless and rewarding as ordering a meal.
+          </p>
+          <button class="btn-cta" onclick="go('scan')">Join the Mission →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="logo-text">Bin<em style="color:var(--y)">Go</em></div>
+          <p>India's most trusted AI-powered scrap recycling platform. Connecting households and businesses with verified scrap dealers for a greener tomorrow.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Services</h4>
+          <ul>
+            <li><a href="#">Residential Collection</a></li>
+            <li><a href="#">Commercial Pickup</a></li>
+            <li><a href="#">E-Waste Recycling</a></li>
+            <li><a href="#">Bulk Scrap</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="#">About BinGo</a></li>
+            <li><a href="#">Careers</a></li>
+            <li><a href="#">Press</a></li>
+            <li><a href="#">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Support</h4>
+          <ul>
+            <li><a href="#">FAQs</a></li>
+            <li><a href="#">Dealer Portal</a></li>
+            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div>© 2025 BinGo Recycling Pvt. Ltd. All rights reserved.</div>
+        <div>Made with 💚 for a greener India</div>
+      </div>
+    </div>
+  </footer>
+</div><!-- /#home -->
+
+
+<!-- =====================================================
+     PAGE: SCAN
+     ===================================================== -->
+<div id="scan" class="pg">
+  <div class="section section-alt" style="padding:48px 0">
+    <div class="container">
+      <div class="sec-eyebrow">Step 1</div>
+      <div class="sec-title" style="margin-bottom:4px">Scan Your Scrap Item</div>
+      <p style="color:var(--text3);font-size:.92rem;margin-bottom:16px">
+        Upload a photo — AI will analyze recyclability and find you the best deal
+      </p>
+
+
+      <div class="scan-grid">
+
+        <!-- LEFT: Upload + AI result -->
+        <div>
+          <div class="drop-zone" id="dropZone"
+            onclick="document.getElementById('fileInput').click()"
+            ondragover="event.preventDefault();this.classList.add('drag')"
+            ondragleave="this.classList.remove('drag')"
+            ondrop="onDrop(event)">
+            <div class="dz-ico"><span class="material-symbols-rounded">search</span></div>
+            <div class="dz-title">Drop your photo here</div>
+            <p class="dz-sub">or <b>click to browse</b> — JPG, PNG, WEBP</p>
+          </div>
+          <input type="file" id="fileInput" accept="image/*" onchange="onFile(event)">
+
+          <div class="preview-box" id="prevBox">
+            <img id="prevImg" src="" alt="Preview">
+            <button class="prev-clear" onclick="clearScan()">✕</button>
+          </div>
+
+          <!-- AI Loader -->
+          <div class="ai-loader" id="aiLoader">
+            <div class="loader-ring"></div>
+            <div style="font-weight:600;color:var(--g);margin-bottom:8px" id="aiMsg">Analyzing your item…</div>
+            <div class="loader-steps">
+              <div class="lstep" id="ls1">📸 Processing image</div>
+              <div class="lstep" id="ls2">🔬 Identifying material</div>
+              <div class="lstep" id="ls3">💡 Estimating market value</div>
+              <div class="lstep" id="ls4">🗺 Locating nearby dealers</div>
+            </div>
+          </div>
+
+          <!-- Result Card -->
+          <div class="result-panel" id="resultPanel">
+            <div class="rcard">
+              <div class="rcard-header">
+                <img id="rImg" class="rcard-img" src="" alt="">
+                <div class="rcard-meta">
+                  <div id="rBadge" class="rbadge rb-y">✅ Recyclable</div>
+                  <div id="rName" class="rcard-name">—</div>
+                  <div id="rDesc" class="rcard-desc">—</div>
+                  <div class="price-row">
+                    <div class="pc">
+                      <div class="pc-l">Price / kg</div>
+                      <div id="rPkg" class="pc-v">₹0</div>
+                    </div>
+                    <div class="pc">
+                      <div class="pc-l">Est. Earnings</div>
+                      <div id="rEst" class="pc-v" style="font-weight:800;color:var(--g)">₹0</div>
+                    </div>
+                    <div class="pc">
+                      <div class="pc-l">Weight (Quantity)</div>
+                      <div class="weight-input-wrap">
+                        <input type="number" id="weightInput" class="w-input" value="1" min="1" max="1000" oninput="updateWeight(this.value)">
+                        <span class="w-unit">kg</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Dealer list + Slots -->
+        <div>
+          <div id="dealerPanel" style="display:none">
+            <div style="font-family:'Barlow',sans-serif;font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:12px">
+              🏪 Nearby Top-Rated Dealers
+            </div>
+            <div class="dealer-list" id="dealerList"></div>
+
+            <div id="slotPanel" style="display:none;margin-top:20px">
+              <div style="font-family:'Barlow',sans-serif;font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:12px">
+                🗓 Choose Pickup Slot
+              </div>
+              <div class="slots-grid" id="slotsGrid"></div>
+            </div>
+
+            <div class="confirm-bar" id="confirmBar">
+              <div class="cb-txt">Booking with <b id="cbName">—</b> · <b id="cbSlot">—</b></div>
+              <button class="btn-cta" onclick="sendReq()">📤 Send Request</button>
+            </div>
+          </div>
+
+          <div id="scanPlaceholder" style="background:#fff;border-radius:var(--rL);padding:48px 28px;text-align:center;border:1px solid var(--border)">
+            <div style="margin-bottom:14px"><span class="material-symbols-rounded" style="font-size:3.5rem;color:var(--text3)">store</span></div>
+            <div style="font-weight:600;color:var(--text2);margin-bottom:6px">Dealer suggestions will appear here</div>
+            <div style="font-size:.84rem;color:var(--text3)">Upload a photo to get started</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div><!-- /#scan -->
+
+
+<!-- =====================================================
+     PAGE: TRACK
+     ===================================================== -->
+<div id="track" class="pg">
+  <div class="section">
+    <div class="container" style="max-width:720px">
+      <div class="sec-eyebrow">Live Status</div>
+      <div class="sec-title" style="margin-bottom:32px">Track Your Pickup Request</div>
+
+      <div id="noTrack" style="background:#fff;border-radius:var(--rL);padding:60px;text-align:center;border:1px solid var(--border)">
+        <div style="margin-bottom:14px"><span class="material-symbols-rounded" style="font-size:3rem;color:var(--text3)">package</span></div>
+        <div style="font-weight:600;margin-bottom:8px">No active request</div>
+        <div style="color:var(--text3);font-size:.88rem;margin-bottom:20px">Scan an item to create a pickup request</div>
+        <button class="btn-cta" onclick="go('scan')">📸 Scan an Item</button>
+      </div>
+
+      <div class="track-wrap" id="trackCard" style="display:none">
+        <div class="track-top">
+          <div>
+            <div class="track-name" id="tName">—</div>
+            <div style="color:var(--text3);font-size:.85rem;margin-top:3px" id="tDealer">—</div>
+          </div>
+          <div class="track-amt" id="tAmt">—</div>
+        </div>
+        <div class="conf-chip" id="confChip">
+          🎉 Accepted by
+          <b id="cName"  style="color:var(--g);margin:0 4px">—</b> ·
+          <b id="cPhone" style="color:var(--g)">—</b>
+        </div>
+        <div class="timeline" id="timeline"></div>
+      </div>
+    </div>
+  </div>
+</div><!-- /#track -->
+
+
+<!-- =====================================================
+     PAGE: MAP
+     ===================================================== -->
+<div id="map" class="pg">
+  <div class="section">
+    <div class="container">
+      <div class="sec-eyebrow">Live Coverage</div>
+      <div class="sec-title" style="margin-bottom:8px">Your Location &amp; Nearby Dealers</div>
+      <p style="color:var(--text3);margin-bottom:24px;font-size:.92rem">
+        Real-time map showing verified scrap dealers near you
+      </p>
+      <div id="mainMap"></div>
+      <div class="map-leg">
+        <div class="mleg"><div class="ldot" style="background:#2e7d32"></div>Your Location</div>
+        <div class="mleg"><div class="ldot" style="background:#f9a825"></div>Scrap Dealers</div>
+        <div class="mleg"><div class="ldot" style="background:#c62828"></div>Selected Dealer</div>
+      </div>
+    </div>
+  </div>
+</div><!-- /#map -->
+
+
+<!-- =====================================================
+     PAGE: DEALER PORTAL
+     ===================================================== -->
+<div id="dealer" class="pg">
+  <div class="section">
+    <div class="container" style="max-width:800px">
+      <div class="sec-eyebrow">Dealer Dashboard</div>
+      <div class="dportal">
+
+        <div class="dp-head">
+          <div class="dp-ico"><span class="material-symbols-rounded">factory</span></div>
+          <div>
+            <div style="display:flex;align-items:center">
+              <div class="dp-name" id="dpName">Dealer Facility</div>
+              <div id="dealerStatusBadge"></div>
+            </div>
+            <div class="dp-sub" id="dpMeta">Verified BinGo Partner</div>
+          </div>
+          
+          <!-- Dealer Status Toggle -->
+          <div style="margin-left:auto;display:flex;align-items:center;gap:20px">
+            <div class="status-toggle" id="statusToggle" onclick="toggleDealerStatus()">
+              <div class="st-label" id="stLabel">OFFLINE</div>
+              <div class="st-switch"></div>
+            </div>
+            
+            <div style="text-align:right">
+              <div id="dpMonthEarnings" style="font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;font-weight:800;color:var(--g)">₹0</div>
+              <div style="font-size:.78rem;color:var(--text3)">This Month</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="font-family:'Barlow',sans-serif;font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:12px">
+          📈 Earnings Graph (Last 6 Months)
+        </div>
+        <div id="dealerEarnings" class="egraph-card">
+          <div class="egraph-y-axis">
+            <span>₹100k</span><span>₹50k</span><span>₹0</span>
+          </div>
+          <div class="egraph-container">
+            <svg class="egraph-svg" viewBox="0 0 400 160" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="graphGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="var(--g)" stop-opacity="0.6"/>
+                  <stop offset="100%" stop-color="var(--g)" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <path class="egraph-path-area" id="graphArea" d="M 0 160 L 0 160 Z"/>
+              <path class="egraph-path-line" id="graphLine" d="M 0 160"/>
+            </svg>
+            <div id="graphDots"></div>
+            <div id="graphLabels"></div>
+          </div>
+        </div>
+
+        <!-- NEW: Dealer Pricing Management Section -->
+        <div style="font-family:'Barlow',sans-serif;font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-top:28px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
+          <div> Set Your Collection Prices</div>
+          <div style="font-size:.7rem;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">* Prices shown to users during scanning</div>
+        </div>
+        <div class="pricing-card">
+          <div class="pricing-grid-header">
+            <div>Material</div>
+            <div style="text-align:right">Price (₹/kg)</div>
+            <div></div>
+          </div>
+          <div id="dealerPricingList">
+            <div style="padding:20px;text-align:center;color:var(--text3);font-size:.85rem">Loading materials…</div>
+          </div>
+        </div>
+
+        <div style="font-family:'Barlow',sans-serif;font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-top:28px;margin-bottom:14px">
+          📬 Incoming Requests
+        </div>
+        <div id="dReqs">
+          <div id="noReqs" style="background:var(--bg);border-radius:var(--r);padding:32px;text-align:center;color:var(--text3);font-size:.88rem">
+            No pending requests yet.
+          </div>
+        </div>
+
+        <div style="font-family:'Barlow',sans-serif;font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-top:28px;margin-bottom:8px">
+          📍 User Location Map
+        </div>
+        <div id="dMap"></div>
+
+      </div>
+    </div>
+  </div>
+</div><!-- /#dealer -->
+
+
+<!-- =====================================================
+     PAGE: DEALER AUTH
+     ===================================================== -->
+<div id="dealerAuth" class="pg dealer-auth-pg">
+  <div class="dealer-auth-wrapper">
+    <div class="dealer-auth-card">
+
+      <!-- Left Panel: Image with green overlay and headline -->
+      <div class="dealer-image-panel">
+        <img src="assets/dealer-auth.png" alt="BinGo Dealer Facility" class="dealer-bg-img">
+        <div class="dealer-overlay"></div>
+        <div class="dealer-image-text">
+          <div class="dealer-brand-badge">
+            <span class="material-symbols-rounded">recycling</span>
+            <span>BinGo Partner Network</span>
+          </div>
+          <h2>India's Smartest<br>Scrap Ecosystem</h2>
+          <p>Join 340+ verified dealers managing pickups, tracking earnings, and growing their recycling business with BinGo.</p>
+          <div class="dealer-stats-row">
+            <div class="dealer-stat">
+              <div class="dealer-stat-num">340+</div>
+              <div class="dealer-stat-label">Active Dealers</div>
+            </div>
+            <div class="dealer-stat">
+              <div class="dealer-stat-num">₹48L</div>
+              <div class="dealer-stat-label">Monthly Payouts</div>
+            </div>
+            <div class="dealer-stat">
+              <div class="dealer-stat-num">4.9★</div>
+              <div class="dealer-stat-label">Avg. Rating</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel: Clean White Form -->
+      <div class="dealer-form-panel">
+        <button class="auth-close" onclick="go('home')" style="background:#f5f5f5;color:#888">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+
+        <!-- Login Form -->
+        <div id="dealerLoginForm" class="auth-forms-inner">
+          <div class="auth-header">
+            <h1>Welcome Back</h1>
+            <p>Sign in to your dealer dashboard to manage scrap requests.</p>
+          </div>
+
+          <div class="auth-group">
+            <label>Business Email</label>
+            <div class="auth-input-wrap">
+              <span class="material-symbols-rounded auth-input-icon">mail</span>
+              <input type="email" id="dealerLoginEmail" placeholder="dealer@company.com">
+            </div>
+          </div>
+
+          <div class="auth-group">
+            <label>Password</label>
+            <div class="auth-input-wrap">
+              <span class="material-symbols-rounded auth-input-icon">lock</span>
+              <input type="password" id="dealerLoginPass" placeholder="••••••••">
+              <button class="pass-toggle" onclick="togglePass('dealerLoginPass')">
+                <span class="material-symbols-rounded">visibility</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="auth-options">
+            <label class="remember-me">
+              <input type="checkbox">
+              <span>Remember Me</span>
+            </label>
+            <a href="#" class="forgot-pass">Forgot Password?</a>
+          </div>
+
+          <button class="btn-auth-primary" onclick="doAuth('login', 'dealer')">Sign In to Dashboard</button>
+
+          <div class="auth-divider"><span>Or Continue With</span></div>
+
+          <div class="auth-social-row" style="justify-content:center">
+            <button class="btn-social" style="max-width:190px;border:1.5px solid #e5e7e5;box-shadow:0 2px 8px rgba(0,0,0,0.04)" onclick="toast('Google Workspace Login coming soon!', 'ok')">
+              <img src="https://www.google.com/favicon.ico" alt="Google">
+              <span style="margin-left:8px;font-weight:600;font-size:0.9rem;color:#444">Google Workspace</span>
+            </button>
+          </div>
+
+          <p class="auth-footer-text">
+            New dealer? <a href="#" onclick="toggleDealerAuth()">Apply for partnership →</a>
+          </p>
+        </div>
+
+        <!-- Signup / Application Form -->
+        <div id="dealerSignupForm" class="auth-forms-inner" style="display:none">
+          <div class="auth-header">
+            <h1>Become a Partner</h1>
+            <p>Register your business with India's largest scrap collection network.</p>
+          </div>
+
+          <div class="auth-group">
+            <label>Company Name</label>
+            <div class="auth-input-wrap">
+              <span class="material-symbols-rounded auth-input-icon">store</span>
+              <input type="text" placeholder="e.g. GreenMetal Recyclers">
+            </div>
+          </div>
+
+          <div class="auth-group">
+            <label>GST Registration Number</label>
+            <div class="auth-input-wrap">
+              <span class="material-symbols-rounded auth-input-icon">badge</span>
+              <input type="text" placeholder="27XXXXX0000X1Z1">
+            </div>
+          </div>
+
+          <div class="auth-group">
+            <label>Business Address</label>
+            <div class="auth-input-wrap">
+              <span class="material-symbols-rounded auth-input-icon">location_on</span>
+              <input type="text" placeholder="e.g. Butibori MIDC, Nagpur">
+            </div>
+          </div>
+
+          <div class="auth-group">
+            <label>Business Email</label>
+            <div class="auth-input-wrap">
+              <span class="material-symbols-rounded auth-input-icon">mail</span>
+              <input type="email" placeholder="contact@company.com">
+            </div>
+          </div>
+
+          <div class="auth-group">
+            <label>Password</label>
+            <div class="auth-input-wrap">
+              <span class="material-symbols-rounded auth-input-icon">lock</span>
+              <input type="password" id="dealerSignupPass" placeholder="Create a strong password">
+              <button class="pass-toggle" onclick="togglePass('dealerSignupPass')">
+                <span class="material-symbols-rounded">visibility</span>
+              </button>
+            </div>
+          </div>
+
+          <button class="btn-auth-primary" onclick="doAuth('signup', 'dealer')" style="margin-top:8px">Submit Application</button>
+
+          <p class="auth-footer-text" style="margin-top:24px">
+            Already a partner? <a href="#" onclick="toggleDealerAuth()">Sign in →</a>
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+     PAGE: AUTH (USER)
+     ===================================================== -->
+<div id="auth" class="pg">
+  <div class="auth-book-wrapper">
+    <div class="auth-book" id="authBook">
+
+      <!-- LEFT: always image -->
+      <div class="auth-panel">
+        <img src="auth-panel.png" alt="BinGo Recycling Quote" class="auth-panel-img">
+      </div>
+
+      <!-- RIGHT: login or signup form -->
+      <div class="auth-panel">
+        <div class="auth-form-panel">
+          <button class="auth-close" onclick="go('home')"><span class="material-symbols-rounded">close</span></button>
+
+          <!-- Login Form -->
+          <div id="loginForm">
+            <div class="auth-header">
+              <h1>Welcome Back</h1>
+              <p>Please enter your details to login.</p>
+            </div>
+            <div class="auth-group">
+              <label>Email Address</label>
+              <div class="auth-input-wrap">
+                <span class="material-symbols-rounded auth-input-icon">mail</span>
+                <input type="email" placeholder="name@example.com">
+              </div>
+            </div>
+            <div class="auth-group">
+              <label>Password</label>
+              <div class="auth-input-wrap">
+                <span class="material-symbols-rounded auth-input-icon">lock</span>
+                <input type="password" id="loginPass" placeholder="••••••••">
+                <button class="pass-toggle" onclick="togglePass('loginPass')"><span class="material-symbols-rounded">visibility</span></button>
+              </div>
+            </div>
+            <div class="auth-options">
+              <label class="remember-me"><input type="checkbox" checked><span>Remember Me</span></label>
+              <a href="#" class="forgot-pass" onclick="toast('Reset link sent!','ok')">Forgot Password?</a>
+            </div>
+            <button class="btn-auth-primary" onclick="doAuth('login')">Log In</button>
+            <div class="auth-divider"><span>Or Continue With</span></div>
+            <div class="auth-social-row" style="justify-content:center">
+              <button class="btn-social" style="max-width:140px;border:none;box-shadow:0 4px 12px rgba(0,0,0,0.05)" onclick="toast('Google Login coming soon!','ok')">
+                <img src="https://www.google.com/favicon.ico" alt="Google">
+                <span style="margin-left:8px;font-weight:600;font-size:0.9rem;color:var(--text2)">Google</span>
+              </button>
+            </div>
+            <p class="auth-footer-text">Don't have an account? <a href="#" onclick="toggleAuth()">Sign up now</a></p>
+          </div>
+
+          <!-- Signup Form -->
+          <div id="signupForm" style="display:none">
+            <div class="auth-header">
+              <h1>Create Account</h1>
+              <p>Start your recycling journey with BinGo today.</p>
+            </div>
+            <div class="auth-group">
+              <label>Full Name</label>
+              <div class="auth-input-wrap">
+                <span class="material-symbols-rounded auth-input-icon">person</span>
+                <input type="text" placeholder="John Doe">
+              </div>
+            </div>
+            <div class="auth-group">
+              <label>Email Address</label>
+              <div class="auth-input-wrap">
+                <span class="material-symbols-rounded auth-input-icon">mail</span>
+                <input type="email" placeholder="name@example.com">
+              </div>
+            </div>
+
+            <div class="auth-group">
+              <label>Address</label>
+              <div class="auth-input-wrap">
+                <span class="material-symbols-rounded auth-input-icon">location_on</span>
+                <input type="text" placeholder="Enter your address">
+              </div>
+            </div>
+
+            <div class="auth-group">
+              <label>Password</label>
+              <div class="auth-input-wrap">
+                <span class="material-symbols-rounded auth-input-icon">lock</span>
+                <input type="password" id="signupPass" placeholder="••••••••">
+                <button class="pass-toggle" onclick="togglePass('signupPass')"><span class="material-symbols-rounded">visibility</span></button>
+              </div>
+            </div>
+            <button class="btn-auth-primary" onclick="doAuth('signup')" style="margin-top:8px">Sign Up</button>
+            <p class="auth-footer-text" style="margin-top:18px">Already have an account? <a href="#" onclick="toggleAuth()">Sign in here</a></p>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div id="toast" class="toast"></div>
+</body>
+</html>
