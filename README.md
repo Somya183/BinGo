@@ -1,165 +1,129 @@
-# 🗑️ BinGo – Flask API Backend
-### YOLOv8 + Pickup System + Live Location Tracking
+# 🗑️ BinGo – Smart Scrap Recycling Platform
+### YOLOv8 AI Detection + Instant Pickup Booking + Live GPS Tracking
+
+🌐 **Live Website:** [https://somya183.github.io/BinGo/](https://somya183.github.io/BinGo/)  
+🚀 **Local Server:** [http://localhost:5000](http://localhost:5000)  
+📦 **GitHub Repository:** [https://github.com/Somya183/BinGo](https://github.com/Somya183/BinGo)
+
+---
+
+## 🌟 Overview
+
+**BinGo** is an end-to-end intelligent scrap recycling platform built for Indian households and commercial scrap dealers. It combines computer vision, real-time geolocation matching, dynamic scrap rate engines, and live tracking into a seamless web experience.
+
+### Key Features
+- 🔍 **AI Scrap Classification:** YOLOv8n object detection classifies scrap into categories (Iron, Aluminium, Copper, PET Plastic, Cardboard, E-Waste, Brass, Steel, Glass) with automatic fallback to Gemini Vision and local spectral analysis.
+- 📍 **Smart Dealer Discovery:** Dynamic 5-km radius geospatial query matching scrap sellers with active local scrap dealers and real-time pricing.
+- 🚛 **Live Location Tracking:** Server-Sent Events (SSE) and polling fallback for real-time truck tracking and live ETA updates.
+- 🏢 **Partner Dealer Portal:** Dealers can manage pickup requests, set custom item pricing, and toggle online/offline availability.
+- 💾 **SQLite Database with Auto-Migration:** Automated database initialization, session authentication with Bcrypt password hashing, and user reward points system.
 
 ---
 
 ## 📁 Project Structure
 
 ```
-your-project/
-├── index.html          ← Your existing frontend (updated)
-├── style.css           ← Your existing styles (unchanged)
-├── script.js           ← ✅ REPLACE with new version
-├── logo.png, etc.      ← Your existing assets
-│
-└── backend/            ← New Flask backend folder
-    ├── app.py          ← Flask API server
-    └── requirements.txt
+BinGo/
+├── index.html          ← Frontend application (single-page dashboard)
+├── style.css           ← Modern green/dark theme styling
+├── script.js           ← Client-side application logic & API client
+├── app.py              ← Unified Flask backend API & static server
+├── bingo.db            ← SQLite database (users, sessions, pickups, prices)
+├── requirements.txt    ← Python dependencies
+├── yolov8n.pt          ← YOLOv8 neural network weights
+├── logo.png            ← Official BinGo brand logo
+└── assets/             ← Visual assets & scrap item illustrations
+    ├── dealer-auth.png
+    └── scrap/
+        ├── iron.png
+        ├── aluminium.png
+        ├── copper.png
+        ├── plastic.png
+        ├── cardboard.png
+        ├── glass.png
+        ├── brass.png
+        ├── ewaste.png
+        └── stainless.png
 ```
 
 ---
 
-## ⚡ Quick Start
+## ⚡ Quick Start & Deployment
 
-### 1. Install Python dependencies
+### 1. Install Dependencies
+
+Ensure Python 3.10+ is installed:
 
 ```bash
-cd backend
 pip install -r requirements.txt
 ```
 
-> **Note:** YOLOv8 installs PyTorch (~500 MB). On first run it also downloads
-> the `yolov8n.pt` model (~6 MB). If you want a faster install without GPU
-> support, replace `ultralytics` with `ultralytics --no-deps` and install
-> `torch torchvision --index-url https://download.pytorch.org/whl/cpu`.
+### 2. Launch Backend & Frontend
 
-### 2. Start the Flask server
+Start the Flask server:
 
 ```bash
 python app.py
 ```
 
-Server starts at **http://localhost:5000**
+The server automatically:
+1. Initializes and migrates `bingo.db` (creates missing tables and columns).
+2. Verifies and seeds 9 Nagpur partner dealers and sets up default scrap pricing.
+3. Serves the REST API on `http://localhost:5000/api`.
+4. Serves the full frontend website at `http://localhost:5000`.
 
-### 3. Open your frontend
+### 3. Open Website
 
-Open `index.html` in a browser. The frontend auto-detects the backend.
+- **Local Web App:** Visit [http://localhost:5000](http://localhost:5000) in your web browser.
+- **Hosted / GitHub Pages:** Visit [https://somya183.github.io/BinGo/](https://somya183.github.io/BinGo/).
 
 ---
 
-## 🧠 API Endpoints
+## 🧠 REST API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/health` | Backend status + YOLO mode |
-| **POST** | **`/api/detect`** | **YOLOv8 image detection + pricing** |
-| GET | `/api/pricing` | All scrap category prices |
-| GET | `/api/dealers?lat=&lng=` | Dealers sorted by distance |
-| GET | `/api/dealers/{id}/slots` | Available pickup time slots |
-| **POST** | **`/api/pickups`** | **Create a pickup request** |
-| GET | `/api/pickups/{id}` | Get pickup status |
-| POST | `/api/pickups/{id}/advance` | Advance pickup status (dealer use) |
-| POST | `/api/location` | Push GPS location (user/dealer) |
-| GET | `/api/location/{pickup_id}` | Get live locations for a pickup |
-| **GET** | **`/api/location/{id}/stream`** | **SSE live location stream** |
-| GET | `/api/dealer/{id}/requests` | Dealer's incoming requests |
-| POST | `/api/auth/login` | Mock login |
-| POST | `/api/auth/signup` | Mock signup |
+| **GET** | `/api/health` | Health check and YOLO mode status |
+| **GET** | `/api/pricing` | Current market rates for all scrap materials |
+| **POST** | `/api/detect` | YOLOv8 scrap item detection and nearby dealer matching |
+| **GET** | `/api/dealers?lat=&lng=&radius=` | Nearby dealers sorted by distance |
+| **GET** | `/api/dealers/<uid>/slots` | Available pickup time slots |
+| **POST** | `/api/auth/signup` | User & Dealer registration |
+| **POST** | `/api/auth/login` | Secure login with Bcrypt & session tokens |
+| **GET** | `/api/auth/me` | Current authenticated user profile & points |
+| **POST** | `/api/auth/logout` | Invalidate active user session |
+| **POST** | `/api/auth/toggle-status` | Toggle dealer online/offline status |
+| **POST** | `/api/auth/update-location` | Push user GPS & receive nearby dealers |
+| **POST** | `/api/pickups` | Schedule and create scrap pickup request |
+| **GET** | `/api/pickups/<pid>` | Retrieve pickup status & details |
+| **POST** | `/api/pickups/<pid>/advance` | Advance pickup lifecycle (pending → accepted → en route → completed) |
+| **POST** | `/api/location` | Push live GPS updates for a pickup |
+| **GET** | `/api/location/<pid>` | Get latest user & dealer locations for a pickup |
+| **GET** | `/api/location/<pid>/stream` | Server-Sent Events (SSE) real-time location stream |
+| **GET** | `/api/dealer/pickups` | Incoming pickup requests for authenticated dealer |
+| **GET** | `/api/dealer/prices` | Custom pricing table for authenticated dealer |
+| **POST** | `/api/dealer/update-price` | Update price per kg for a scrap category |
 
 ---
 
-## 📸 Detection API Usage
+## 🛠️ Database Schema (`bingo.db`)
 
-```javascript
-// Frontend automatically sends image to Flask
-// POST /api/detect  (multipart/form-data)
-// Fields: image (file), lat, lng, weight_kg (optional), condition
-
-// Response:
-{
-  "success": true,
-  "yolo_mode": "real",   // or "simulation" if YOLOv8 not installed
-  "top_item": {
-    "detected_class": "bottle",
-    "confidence": 0.91,
-    "scrap_category": "PET Plastic",
-    "recyclable": true,
-    "price_per_kg": "₹18–28",
-    "estimated_value": "—",
-    "description": "Clear PET plastic..."
-  },
-  "detections": [...],   // top 5 detected objects
-  "dealers": [...]       // nearby dealers sorted by distance
-}
-```
+The SQLite database contains:
+- `users`: Stores sellers and dealers (`id`, `name`, `email`, `password_hash`, `role`, `address`, `phone`, `lat`, `lng`, `pts`, `is_active`, `created_at`).
+- `sessions`: Persistent 30-day bearer tokens (`token`, `user_id`, `expires_at`).
+- `pickups`: Scrap pickup orders (`id`, `user_id`, `dealer_id`, `item_name`, `weight_kg`, `price_per_kg`, `est_earning`, `user_lat`, `user_lng`, `status`, `slot_id`, `created_at`).
+- `dealer_prices`: Custom per-dealer rates per scrap material (`dealer_id`, `item_name`, `price`).
 
 ---
 
-## 📍 Live Location Tracking
+## 👥 Demo Accounts
 
-The system uses **Server-Sent Events (SSE)** for real-time tracking:
-
-```javascript
-// Frontend connects automatically when pickup is confirmed
-const source = new EventSource('http://localhost:5000/api/location/PICKUP_ID/stream');
-source.onmessage = (e) => {
-  const { user, dealer, distance_km, eta_min, status } = JSON.parse(e.data);
-  // Update map markers
-};
-```
-
-In **simulation mode**, the dealer marker moves toward the user over ~15 minutes.
-In **production**, dealers push their GPS via `POST /api/location`.
+| Role | Email | Password |
+|------|-------|----------|
+| **Dealer 1** | `iron@bingo.com` | `dealer123` |
+| **Dealer 2** | `orange@bingo.com` | `dealer123` |
+| **User** | `dubeysomya651@gmail.com` | *(Registered user)* |
 
 ---
 
-## 💰 Pricing Engine
-
-Prices are dynamically calculated with:
-- **Condition multipliers**: excellent (+10%), good (0%), fair (-15%), poor (-30%)
-- **Daily market variation**: ±6% based on date seed
-- **COCO class mapping**: YOLOv8 classes automatically mapped to scrap categories
-
----
-
-## 🔄 Detection Flow
-
-```
-User uploads image
-       ↓
-1. Flask /api/detect (YOLOv8)
-       ↓ (if backend offline)
-2. Gemini Vision API
-       ↓ (if Gemini unavailable)
-3. Local Color/Texture Analysis
-```
-
----
-
-## 🚀 Production Deployment
-
-1. Replace `API_BASE` in `script.js` with your server URL
-2. Add a real database (SQLite / PostgreSQL) to replace in-memory stores
-3. Use gunicorn: `gunicorn -w 4 app:app`
-4. Train custom YOLOv8 weights on scrap dataset for better accuracy:
-   ```bash
-   yolo train model=yolov8n.pt data=scrap_dataset.yaml epochs=50
-   ```
-5. Deploy with nginx for SSE support (disable buffering)
-
----
-
-## 📦 Dependencies
-
-```
-flask           – Web framework
-flask-cors      – CORS for frontend access
-ultralytics     – YOLOv8 detection
-opencv-python   – Image processing
-Pillow          – Image loading
-numpy           – Array operations
-```
-
----
-
-*Built for BinGo – India's Smart Scrap Recycling Platform 💚*
+*Built with 💚 for BinGo – India's Smart Scrap Recycling Platform*

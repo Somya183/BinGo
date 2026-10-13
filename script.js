@@ -11,7 +11,9 @@
    ============================================================ */
 
 /* ── Config ─────────────────────────────────────────────────── */
-const API_BASE = 'http://127.0.0.1:5000/api';
+const API_BASE = (window.location.origin && window.location.origin.startsWith('http'))
+  ? `${window.location.origin}/api`
+  : 'http://127.0.0.1:5000/api';
 
 /* ── Static fallback dealers (Nashik-centred, used when API offline) ── */
 const DEALERS_STATIC = [
@@ -279,18 +281,18 @@ async function doAuth(mode, role = 'user') {
         toast(`✅ Account created successfully! Please login now.`, 'ok');
         
         // Switch the UI back to the login form
-        // Inside doAuth after success:
-S.token = data.token;
-S.user = { 
-    id: data.user_id, 
-    name: data.name || 'User', 
-    role: data.role // This is the key!
-};
+        S.token = data.token;
+        S.user = { 
+            id: data.user_id, 
+            name: data.name || 'User', 
+            email: data.email,
+            role: data.role
+        };
 
-localStorage.setItem('bingo_token', data.token);
-localStorage.setItem('bingo_user', JSON.stringify(S.user));
+        localStorage.setItem(SESSION_KEY, data.token);
+        localStorage.setItem(USER_KEY, JSON.stringify(S.user));
 
-updateAuthUI();
+        updateAuthUI();
 
 // Smart Redirection
 const targetPage = S.user.role === 'dealer' ? 'dealer' : 'home';
